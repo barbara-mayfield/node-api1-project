@@ -37,19 +37,18 @@ app.get("/api/users/:id", (req, res) => {
 
 app.post("/api/users", (req, res) => {
     if(!req.body.name || !req.body.bio) {
-        return res.status(400).json({ errorMessage: "Please provide name and bio for the user."})
-    }
+        res.status(400).json({ errorMessage: "Please provide name and bio for the user."})
+    } else if (req.body.name && req.body.bio) {
 
-    const newUser = {
-        name: req.body.name,
-        bio: req.body.bio
-    }
+        const newUser = {
+            name: req.body.name,
+            bio: req.body.bio
+        }
 
-    if(user) {
-    db.push(newUser)
-    res.status(201).json(newUser)
-    } else {
-        res.status(404).json({ errorMessage: "There was an error while saving the user to the database" })
+        db.insert(newUser)
+        res.status(201).json(newUser)
+        } else {
+            res.status(404).json({ errorMessage: "There was an error while saving the user to the database" })
     }
 })
 
