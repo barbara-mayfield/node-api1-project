@@ -1,5 +1,6 @@
 // implement your API here
 const express = require("express");
+const cors = require("cors");
 let db = require("./data/db");
 
 const app = express()
@@ -53,32 +54,66 @@ app.post("/api/users", (req, res) => {
     }
 })
 
-app.put("/api/users/:id", (req, res) => {  
-    const id = req.params.id;
-    const user = req.body;
-    const name = req.body.name;
-    const bio = req.body.bio;
+// app.put("/api/users/:id", (req, res) => {  
+//     const id = req.params.id;
+//     const user = req.body;
+//     const name = req.body.name;
+//     const bio = req.body.bio;
     
-    if (!name || !bio) {
-        res.status(400).json({ errorMessage: 'Please provide name and bio for the user.' });
-    }
+//     if (!name || !bio) {
+//         res.status(400).json({ errorMessage: 'Please provide name and bio for the user.' });
+//     }
 
-    db.update(id, user)
-      .then(updateUser => {        
-        if (!updateUser) {
-          res.status(404).json({ message: 'The user with the specified ID does not exist.' });
-        } else {
-          res.status(200).json({ message: 'The user information was updated successfully' });
-        }
-      })
-      .catch(() => {
-        res.status(500).json({ error: 'The user information could not be modified.' });
-      });
+//     db.update(id, user)
+//       .then(updateUser => {        
+//         if (!updateUser) {
+//           res.status(404).json({ message: 'The user with the specified ID does not exist.' });
+//         } else {
+//           res.status(200).json({ message: 'The user information was updated successfully' });
+//         }
+//       })
+//       .catch(() => {
+//         res.status(500).json({ error: 'The user information could not be modified.' });
+//       });
+// })
+
+app.put("/api/users/:id", async (req, res) => {
+    const { name, bio } = req.body
+    if(!name || !bio) {
+        return res.status(400).json({ error: "Please provide name and bio for the user"})
+
+        db.findById(req.params.id)
+            .then(user => {
+                if (user) {
+                    return db.update(req.params.id, { name, bio })
+                }
+                res.status(404).json({ error: "The user with the specified ID does not exist"})
+            })
+            .then(() => db.findById(req.params.id))
+            .then(data => res.json(data))
+            .catch(err => {
+                res.status(500).json({ error: "The user information could not be modified" })
+            })
+
+        // WITH ASYNC AWAIT
+
+        // try {
+        //     const user = await db.findById(req.params.id)
+        //     if(!user) {
+        //         return res.status(404).json({ error: "The user with the specified ID does not exist" })
+        //     }
+
+        //     await db.update(req.params.id, { name, bio }
+            
+        // } catch(err) {
+        //     res.status(500).json({ error: "The user information could not be modified" })
+        // }
+        // }
+    }
 })
 
 app.delete("/api/users/:id", (req, res) => {
     const id = req.params.id;
-    
     db.remove(id)
         .then(user => {
             if(user) {
@@ -88,6 +123,15 @@ app.delete("/api/users/:id", (req, res) => {
             }
         })
 })
+
+// app.delete("/api/users/:id", (req, res) => {
+//     db.findById(req.params.id)
+//         .then(user => {
+//             if(user) {
+//                 return db.remove(req.params.id).then(() => user)
+//             }
+//         })
+// })
 
 const port = 8080
 const host = "127.0.0.1" 
